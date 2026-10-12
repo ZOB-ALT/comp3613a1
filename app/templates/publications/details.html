@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ publication.title }} | ScholarNet{% endblock %}
+
+{% block content %}
+<div class="publication-page">
+  <header class="publication-header">
+    <a class="publication-brand" href="{{ url_for('browse_publications') }}">{% include "brand-mark.html" %}</a>
+    <nav aria-label="Account">
+      <a href="{{ url_for('login_view') }}">Sign in</a>
+    </nav>
+  </header>
+
+  <main class="publication-content publication-detail">
+    <a class="publication-back" href="{{ url_for('browse_publications') }}">← Back to Browse</a>
+    <p class="publication-eyebrow">Publication details</p>
+    <h1>{{ publication.title }}</h1>
+    <dl class="publication-facts">
+      <div>
+        <dt>Authors</dt>
+        <dd>
+          {% for credit in publication.authored_records|sort(attribute="position") %}
+            <span>{{ credit.author.first_name }} {{ credit.author.last_name }}{% if credit.author.affiliation %}, {{ credit.author.affiliation }}{% endif %}</span>{% if not loop.last %}; {% endif %}
+          {% else %}
+            Author details unavailable
+          {% endfor %}
+        </dd>
+      </div>
+      <div><dt>Journal</dt><dd>{{ publication.journal }}</dd></div>
+      <div><dt>Conference</dt><dd>{{ publication.conference }}</dd></div>
+      <div><dt>Year</dt><dd>{{ publication.year }}</dd></div>
+      <div><dt>DOI</dt><dd>{{ publication.doi }}</dd></div>
+      <div><dt>Publisher</dt><dd>{{ publication.publisher.name }}</dd></div>
+      <div><dt>Keywords</dt><dd>{{ publication.keywords }}</dd></div>
+    </dl>
+
+    <section class="publication-detail-section">
+      <h2>Abstract</h2>
+      <p>{{ publication.abstract }}</p>
+    </section>
+
+    <section class="publication-detail-section">
+      <h2>Citations</h2>
+      {% if publication.citations_made %}
+      <ul class="publication-citations">
+        {% for citation in publication.citations_made %}
+        <li>
+          {% set cited = citation.cited_publication %}
+          {% set cited_authors = cited.authored_records|sort(attribute="position") %}
+          {% if cited_authors %}
+            {{ cited_authors[0].author.last_name }}{% if cited_authors|length > 1 %} et al.{% endif %}
+          {% else %}
+            {{ cited.title }}
+          {% endif %}, {{ cited.year }}
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>No citations are recorded for this publication.</p>
+      {% endif %}
+    </section>
+  </main>
+</div>
+{% endblock %}

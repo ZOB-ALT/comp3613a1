@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Browse Publications | ScholarNet{% endblock %}
+
+{% block content %}
+<div class="publication-page">
+  <header class="publication-header">
+    <a class="publication-brand" href="{{ url_for('browse_publications') }}">{% include "brand-mark.html" %}</a>
+    <nav aria-label="Discovery and account">
+      <a href="{{ url_for('author_graph') }}">Author Graph</a>
+      <a href="{{ url_for('login_view') }}">Sign in</a>
+    </nav>
+  </header>
+
+  <main class="publication-content">
+    <div class="publication-heading">
+      <p class="publication-eyebrow">ScholarNet library</p>
+      <h1>Browse Publications</h1>
+      <p>Explore scholarly work and the authors behind it.</p>
+    </div>
+
+    {% if author_filter %}
+    <p class="publication-filter-note">
+      Showing publications by {{ author_filter.first_name }} {{ author_filter.last_name }}.
+      <a href="{{ url_for('browse_publications') }}">Clear author filter</a>
+    </p>
+    {% endif %}
+
+    <form class="publication-search" method="get" action="{{ url_for('browse_publications') }}">
+      {% if author_id %}
+      <input type="hidden" name="author_id" value="{{ author_id }}">
+      {% endif %}
+      <label class="visually-hidden" for="publication-query">Search publications</label>
+      <input
+        id="publication-query"
+        type="search"
+        name="query"
+        value="{{ query }}"
+        placeholder="Search publications..."
+      >
+      <label class="visually-hidden" for="publication-year">Filter by year</label>
+      <select id="publication-year" name="year">
+        <option value="">All years</option>
+        {% for available_year in years %}
+        <option value="{{ available_year }}" {{ "selected" if year == available_year }}>
+          {{ available_year }}
+        </option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="publication-button">Search</button>
+    </form>
+
+    <section class="publication-results" aria-label="Publication results">
+      {% for publication in publications %}
+      <article class="publication-card">
+        <h2>
+          <a href="{{ url_for('publication_details', publication_id=publication.id) }}">
+            {{ publication.title }}
+          </a>
+        </h2>
+        <p class="publication-authors">
+          <strong>Authors:</strong>
+          {% for credit in publication.authored_records|sort(attribute="position") %}
+            {{ credit.author.first_name }} {{ credit.author.last_name }}{% if not loop.last %}, {% endif %}
+          {% else %}
+            Author details unavailable
+          {% endfor %}
+        </p>
+        <p class="publication-meta">
+          {% if publication.journal %}{{ publication.journal }}{% endif %}
+          {% if publication.conference %}{% if publication.journal %} · {% endif %}{{ publication.conference }}{% endif %}
+          {% if publication.year %} {{ publication.year }}{% endif %}
+          {% if publication.doi %}<span>DOI: {{ publication.doi }}</span>{% endif %}
+        </p>
+        <p class="publication-abstract">{{ publication.abstract }}</p>
+        <a class="publication-details-link" href="{{ url_for('publication_details', publication_id=publication.id) }}">
+          View Details
+        </a>
+      </article>
+      {% else %}
+      <p class="publication-empty">No publications match those search criteria.</p>
+      {% endfor %}
+    </section>
+
+    <nav class="publication-pagination" aria-label="Publication pages">
+      <span>
+        Page {{ pagination.page }} of {{ pagination.total_pages or 1 }}
+      </span>
+      <div>
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('browse_publications') }}?query={{ query|urlencode }}{% if year is not none %}&amp;year={{ year }}{% endif %}{% if author_id %}&amp;author_id={{ author_id }}{% endif %}&amp;page={{ pagination.prev_num }}">Previous</a>
+        {% else %}
+        <span class="pagination-disabled">Previous</span>
+        {% endif %}
+        {% if pagination.has_next %}
+        <a href="{{ url_for('browse_publications') }}?query={{ query|urlencode }}{% if year is not none %}&amp;year={{ year }}{% endif %}{% if author_id %}&amp;author_id={{ author_id }}{% endif %}&amp;page={{ pagination.next_num }}">Next</a>
+        {% else %}
+        <span class="pagination-disabled">Next</span>
+        {% endif %}
+      </div>
+    </nav>
+  </main>
+</div>
+{% endblock %}

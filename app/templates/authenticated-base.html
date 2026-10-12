@@ -4,7 +4,7 @@
 <style>
     body {
         overflow-x: hidden;
-        background: #f4f6f8;
+        background: var(--brand-bg);
     }
 
     #wrapper {
@@ -32,8 +32,8 @@
 
     #sidebar .nav-link:hover,
     #sidebar .nav-link.active {
-        color: #fff;
-        background-color: color-mix(in srgb, var(--brand-accent) 55%, #000);
+        color: var(--brand-primary);
+        background-color: var(--brand-accent);
         border-radius: 0.5rem;
     }
 
@@ -50,11 +50,11 @@
         transition: all 0.3s;
         display: flex;
         flex-direction: column;
-        background-color: #f4f6f8;
+        background-color: var(--brand-bg);
     }
 
     .navbar {
-        border-bottom: 1px solid #dee2e6;
+        border-bottom: 1px solid rgba(27, 54, 93, 0.14);
     }
 </style>
 {% block additional_styles %}{% endblock %}
@@ -63,18 +63,25 @@
 {% block content %}
 <div id="wrapper">
     <nav id="sidebar" class="p-3 d-flex flex-column vh-100">
-        <div class="brand-wordmark">FastStarter</div>
+        <div class="brand-wordmark">{% include "brand-mark.html" %}</div>
 
         <ul class="nav nav-pills flex-column gap-2 flex-grow-1">
             <li class="nav-item">
-                <a class="nav-link d-flex align-items-center {{ 'active' if request.url.path.startswith('/app') }}"
-                   href="{{ url_for('user_home_view') }}">
+                <a class="nav-link d-flex align-items-center {{ 'active' if request.url.path.startswith('/publications') }}"
+                   href="{{ url_for('browse_publications') }}">
                     <span class="material-symbols-outlined me-2">home</span>
-                    Home
+                    Browse Publications
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link d-flex align-items-center {{ 'active' if request.url.path.startswith('/manage/publications') }}"
+                   href="{{ url_for('manage_publications') }}">
+                    <span class="material-symbols-outlined me-2">library_books</span>
+                    My Publications
                 </a>
             </li>
             <li class="nav-item mt-auto">
-                <a class="nav-link d-flex align-items-center text-danger" href="{{ url_for('logout') }}">
+                <a class="nav-link d-flex align-items-center" href="{{ url_for('logout') }}">
                     <span class="material-symbols-outlined me-2">logout</span>
                     Logout
                 </a>
@@ -82,8 +89,8 @@
         </ul>
     </nav>
 
-    <div id="content">
-        <nav class="navbar navbar-expand-lg bg-white mb-4 px-3 rounded-3 shadow-sm">
+    <div id="content" class="authenticated-shell">
+        <nav class="navbar navbar-expand-lg mb-4 px-3 rounded-3 shadow-sm">
             <button class="btn btn-outline-secondary" id="menu-toggle" type="button">
                 <span class="material-symbols-outlined md-dark">menu</span>
             </button>

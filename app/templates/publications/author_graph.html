@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}Author Graph | ScholarNet{% endblock %}
+
+{% block content %}
+<div class="publication-page">
+  <header class="publication-header">
+    <a class="publication-brand" href="{{ url_for('browse_publications') }}">{% include "brand-mark.html" %}</a>
+    <nav aria-label="Discovery and account">
+      <a href="{{ url_for('browse_publications') }}">Browse Publications</a>
+      <a href="{{ url_for('login_view') }}">Sign in</a>
+    </nav>
+  </header>
+
+  <main class="publication-content author-graph-content">
+    <div class="publication-heading">
+      <p class="publication-eyebrow">ScholarNet connections</p>
+      <h1>Author Graph</h1>
+      <p>Explore researchers connected through shared publications.</p>
+    </div>
+
+    <form class="author-graph-filters" method="get" action="{{ url_for('author_graph') }}">
+      <label class="visually-hidden" for="graph-publication">Filter by publication</label>
+      <select id="graph-publication" name="publication_id">
+        <option value="">All publications</option>
+        {% for publication in graph_data.publications %}
+        <option value="{{ publication.id }}" {{ "selected" if graph_data.selected_publication_id == publication.id }}>
+          {{ publication.title }}
+        </option>
+        {% endfor %}
+      </select>
+      <label class="visually-hidden" for="graph-author-query">Search author</label>
+      <input
+        id="graph-author-query"
+        type="search"
+        name="author_query"
+        value="{{ author_query }}"
+        placeholder="Search Author..."
+      >
+      <button class="publication-button" type="submit">Apply</button>
+    </form>
+
+    {% if graph_data.highlighted_author_count %}
+    <p class="author-graph-search-status" role="status">
+      {{ graph_data.highlighted_author_count }} author{% if graph_data.highlighted_author_count != 1 %}s{% endif %} highlighted.
+    </p>
+    {% elif graph_data.author_query %}
+    <p class="author-graph-search-status" role="status">No authors match “{{ graph_data.author_query }}”. The full network remains visible.</p>
+    {% endif %}
+
+    {% if graph_data.nodes %}
+    <section class="author-graph-legend" aria-label="Graph legend">
+      <span><i class="author-graph-key author-graph-key-selected"></i> Authors on selected publication</span>
+      <span><i class="author-graph-key author-graph-key-edge"></i> Authors share at least one publication</span>
+    </section>
+
+    <div class="author-graph-layout">
+      <div class="author-graph-canvas">
+        <svg
+          class="author-graph-svg"
+          viewBox="0 0 900 500"
+          role="group"
+          aria-label="Author collaboration graph. Select a node to view author details."
+        >
+          <g class="author-graph-edges" aria-hidden="true">
+            {% for edge in graph_data.edges %}
+            <line
+              x1="{{ edge.x1 }}"
+              y1="{{ edge.y1 }}"
+              x2="{{ edge.x2 }}"
+              y2="{{ edge.y2 }}"
+              class="author-graph-edge"
+            >
+              <title>{{ edge.shared_publication_count }} shared publication{% if edge.shared_publication_count != 1 %}s{% endif %}</title>
+            </line>
+            {% endfor %}
+          </g>
+          <g class="author-graph-nodes">
+            {% for node in graph_data.nodes %}
+            <g
+              class="author-graph-node{% if node.is_publication_author %} is-publication-author{% endif %}{% if node.matches_search %} is-search-match{% endif %}{% if node.author.id == graph_data.initial_author_id %} is-selected{% endif %}"
+              data-author-id="{{ node.author.id }}"
+              role="button"
+              tabindex="0"
+              aria-label="{{ node.author.first_name }} {{ node.author.last_name }}, {{ node.publications|length }} publications"
+              aria-pressed="{{ 'true' if node.author.id == graph_data.initial_author_id else 'false' }}"
+            >
+              <title>{{ node.author.first_name }} {{ node.author.last_name }}</title>
+              <ellipse cx="{{ node.x }}" cy="{{ node.y }}" rx="76" ry="40"></ellipse>
+              <text x="{{ node.x }}" y="{{ node.y }}">{{ node.label }}</text>
+            </g>
+            {% endfor %}
+          </g>
+        </svg>
+        <p class="author-graph-hint">Select a node to see author details.</p>
+      </div>
+
+      <aside class="author-graph-details" id="author-details" aria-live="polite">
+        {% for node in graph_data.nodes %}
+        <section
+          data-author-details="{{ node.author.id }}"
+          {% if node.author.id != graph_data.initial_author_id %}hidden{% endif %}
+        >
+          <p class="publication-eyebrow">Selected author</p>
+          <h2>{{ node.author.first_name }} {{ node.author.last_name }}</h2>
+          <p><strong>Affiliation:</strong> {{ node.author.affiliation or "Not listed" }}</p>
+          <p><strong>Publications:</strong> {{ node.publications|length }}</p>
+          <a class="publication-button" href="{{ url_for('browse_publications') }}?author_id={{ node.author.id }}">
+            View All Publications
+          </a>
+        </section>
+        {% endfor %}
+        <p
+          class="author-graph-detail-empty"
+          id="author-detail-empty"
+          {% if graph_data.initial_author_id is not none %}hidden{% endif %}
+        >
+          Select an author node to view details.
+        </p>
+      </aside>
+    </div>
+    {% else %}
+    <p class="publication-empty">No author-publication links are available to graph yet.</p>
+    {% endif %}
+  </main>
+</div>
+
+{% if graph_data.nodes %}
+<script>
+  const graphNodes = document.querySelectorAll(".author-graph-node");
+  const authorDetails = document.querySelectorAll("[data-author-details]");
+  const emptyAuthorDetails = document.getElementById("author-detail-empty");
+
+  function selectAuthor(authorId) {
+    let found = false;
+    graphNodes.forEach((node) => {
+      const selected = node.dataset.authorId === authorId;
+      node.classList.toggle("is-selected", selected);
+      node.setAttribute("aria-pressed", String(selected));
+      found = found || selected;
+    });
+    authorDetails.forEach((details) => {
+      details.hidden = details.dataset.authorDetails !== authorId;
+    });
+    emptyAuthorDetails.hidden = found;
+  }
+
+  graphNodes.forEach((node) => {
+    node.addEventListener("click", () => selectAuthor(node.dataset.authorId));
+    node.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        selectAuthor(node.dataset.authorId);
+      }
+    });
+  });
+</script>
+{% endif %}
+{% endblock %}

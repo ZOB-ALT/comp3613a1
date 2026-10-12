@@ -47,7 +47,7 @@ def cmd_init(args: argparse.Namespace) -> None:
 
 
 def cmd_seed(args: argparse.Namespace) -> None:
-    """Insert demo users.
+    """Seed demo users and sample research records.
 
     bob / bobpass       (regular_user)
     admin / adminpass   (admin)
@@ -88,6 +88,10 @@ def cmd_seed(args: argparse.Namespace) -> None:
 
     print(f"Seed done — created {created}, skipped {skipped}.")
     print("Login with bob/bobpass or admin/adminpass")
+    from app.seed_data import seed_research_demo_data
+
+    seed_research_demo_data()
+    print("Sample author login: scholar01 / scholarpass")
 
 
 def cmd_run(args: argparse.Namespace) -> None:
@@ -221,7 +225,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_init = sub.add_parser(
         "init",
-        help="Create DB tables and seed demo users (drops existing tables by default)",
+        help="Create DB tables and seed demo data (drops existing tables by default)",
     )
     p_init.add_argument(
         "--no-drop",
@@ -239,7 +243,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_seed = sub.add_parser(
         "seed",
-        help="Insert demo users only (idempotent; also runs as part of init)",
+        help="Seed demo users and research records (idempotent; also runs as part of init)",
     )
     p_seed.set_defaults(func=cmd_seed)
 

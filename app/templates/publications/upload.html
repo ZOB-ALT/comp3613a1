@@ -1,0 +1,283 @@
+{% extends "authenticated-base.html" %}
+{% block title %}{% if publication %}Edit{% else %}Upload{% endif %} Publication | ScholarNet{% endblock %}
+
+{% block subpage_content %}
+<main class="container-fluid publication-management">
+  <p class="publication-eyebrow mb-1">ScholarNet author workspace</p>
+  <h1 class="publication-page-title mb-4">
+    {% if publication %}Edit Publication{% else %}Upload New Publication{% endif %}
+  </h1>
+
+  <form
+    class="publication-form"
+    method="post"
+    {% if publication %}
+    action="{{ url_for('update_publication', publication_id=publication.id) }}"
+    {% else %}
+    action="{{ url_for('create_publication') }}"
+    {% endif %}
+  >
+    <div class="publication-form-grid">
+      <div class="mb-3">
+        <label class="form-label" for="title">Title*</label>
+        <input class="form-control" type="text" id="title" name="title" value="{{ publication.title if publication else '' }}" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="abstract">Abstract*</label>
+        <textarea class="form-control" id="abstract" name="abstract" rows="4" required>{{ publication.abstract if publication else '' }}</textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="doi">DOI*</label>
+        <input class="form-control" type="text" id="doi" name="doi" value="{{ publication.doi if publication else '' }}" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="publisher_id">Publisher*</label>
+        <select class="form-select" id="publisher_id" name="publisher_id" required>
+          <option value="">Select a publisher</option>
+          {% for publisher in publishers %}
+          <option value="{{ publisher.id }}" {{ "selected" if selected_publisher_id == publisher.id }}>
+            {{ publisher.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="journal">Journal*</label>
+        <input class="form-control" type="text" id="journal" name="journal" value="{{ publication.journal if publication else '' }}" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="conference">Conference*</label>
+        <input class="form-control" type="text" id="conference" name="conference" value="{{ publication.conference if publication else '' }}" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="year">Year*</label>
+        <input class="form-control" type="number" id="year" name="year" min="1000" max="9999" value="{{ publication.year if publication else '' }}" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label" for="keywords">Keywords*</label>
+        <input class="form-control" type="text" id="keywords" name="keywords" value="{{ publication.keywords if publication else '' }}" required>
+      </div>
+    </div>
+
+    <section class="publication-form-section">
+      <h2>Co-Authors</h2>
+      <div class="publication-add-row">
+        <label class="visually-hidden" for="author-option">Add a co-author</label>
+        <select class="form-select" id="author-option">
+          <option value="">Select an author</option>
+          {% for author in authors %}
+          <option value="{{ author.id }}">{{ author.first_name }} {{ author.last_name }}{% if author.affiliation %} — {{ author.affiliation }}{% endif %}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline-primary" type="button" id="add-author">Add Co-Author</button>
+      </div>
+      <ol class="publication-order-list" id="author-list">
+        {% for author in selected_authors %}
+        <li
+          data-author-id="{{ author.id }}"
+          {% if pin_owner and loop.first %}data-owner-pinned="true"{% endif %}
+        >
+          <input type="hidden" name="author_ids" value="{{ author.id }}">
+          <span class="publication-position">{{ loop.index }}.</span>
+          <span class="publication-order-name">{{ author.first_name }} {{ author.last_name }}{% if author.affiliation %}, {{ author.affiliation }}{% endif %}{% if pin_owner and loop.first %} <small class="publication-owner-note">(you: {{ user.username }})</small>{% endif %}</span>
+          {% if not (pin_owner and loop.first) %}
+          <span class="publication-order-actions">
+            <button type="button" data-move="up" aria-label="Move {{ author.first_name }} {{ author.last_name }} up">↑</button>
+            <button type="button" data-move="down" aria-label="Move {{ author.first_name }} {{ author.last_name }} down">↓</button>
+            <button type="button" data-remove-author aria-label="Remove {{ author.first_name }} {{ author.last_name }}">×</button>
+          </span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ol>
+      {% if pin_owner %}
+      <p class="form-text">You are automatically added as the first author. Your {{ user.username }} account is linked to this author profile.</p>
+      {% else %}
+      <p class="form-text">The first-listed author manages this publication; reordering can transfer management access.</p>
+      {% endif %}
+    </section>
+
+    <section class="publication-form-section">
+      <h2>Citations</h2>
+      <div class="publication-add-row">
+        <label class="visually-hidden" for="citation-option">Add a citation</label>
+        <select class="form-select" id="citation-option">
+          <option value="">Select a publication</option>
+          {% for candidate in citation_candidates %}
+          <option value="{{ candidate.id }}">{{ candidate.title }} ({{ candidate.year }})</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline-primary" type="button" id="add-citation">Add Citation</button>
+      </div>
+      <ul class="publication-citation-list" id="citation-list">
+        {% for cited in selected_citations %}
+        <li data-citation-id="{{ cited.id }}">
+          <input type="hidden" name="citation_ids" value="{{ cited.id }}">
+          <span>{{ cited.title }} ({{ cited.year }})</span>
+          <button type="button" data-remove-citation aria-label="Remove citation to {{ cited.title }}">×</button>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <div class="publication-form-actions">
+      <button class="btn btn-primary" type="submit">Save</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('manage_publications') }}">Cancel</a>
+    </div>
+  </form>
+</main>
+{% endblock %}
+
+{% block subpage_scripts %}
+<script>
+  const authorList = document.getElementById("author-list");
+  const authorSelect = document.getElementById("author-option");
+  const citationList = document.getElementById("citation-list");
+  const citationSelect = document.getElementById("citation-option");
+  const pinOwner = {{ "true" if pin_owner else "false" }};
+
+  function dataKey(attribute) {
+    return attribute.slice(5).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+  }
+
+  function updateOptions(select, list, itemAttribute) {
+    const key = dataKey(itemAttribute);
+    const selectedIds = new Set(
+      Array.from(list.querySelectorAll(`[${itemAttribute}]`), (item) => item.dataset[key])
+    );
+    Array.from(select.options).forEach((option) => {
+      if (option.value) option.disabled = selectedIds.has(option.value);
+    });
+  }
+
+  function refreshAuthorOrder() {
+    Array.from(authorList.children).forEach((item, index) => {
+      const position = item.querySelector(".publication-position");
+      if (position) position.textContent = `${index + 1}.`;
+      const up = item.querySelector('[data-move="up"]');
+      const down = item.querySelector('[data-move="down"]');
+      if (up) {
+        up.disabled =
+          pinOwner && item.previousElementSibling?.hasAttribute("data-owner-pinned");
+      }
+      if (down) {
+        down.disabled = pinOwner && item.hasAttribute("data-owner-pinned");
+      }
+    });
+  }
+
+  function bindAuthorRow(item) {
+    item.querySelectorAll("[data-move]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (button.disabled) return;
+        if (button.dataset.move === "up" && item.previousElementSibling) {
+          authorList.insertBefore(item, item.previousElementSibling);
+        } else if (button.dataset.move === "down" && item.nextElementSibling) {
+          authorList.insertBefore(item.nextElementSibling, item);
+        }
+        refreshAuthorOrder();
+      });
+    });
+    const remove = item.querySelector("[data-remove-author]");
+    if (remove) {
+      remove.addEventListener("click", (event) => {
+        event.preventDefault();
+        item.remove();
+        updateOptions(authorSelect, authorList, "data-author-id");
+        refreshAuthorOrder();
+      });
+    }
+  }
+
+  function bindCitationRow(item) {
+    const remove = item.querySelector("[data-remove-citation]");
+    if (remove) {
+      remove.addEventListener("click", (event) => {
+        event.preventDefault();
+        item.remove();
+        updateOptions(citationSelect, citationList, "data-citation-id");
+      });
+    }
+  }
+
+  function addListItem(list, select, isAuthor, itemAttribute, inputName) {
+    const option = select.selectedOptions[0];
+    if (!option || !option.value) return;
+    const item = document.createElement("li");
+    const id = option.value;
+    item.dataset[dataKey(itemAttribute)] = id;
+
+    const hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.name = inputName;
+    hidden.value = id;
+    item.append(hidden);
+
+    const label = document.createElement("span");
+    label.textContent = option.textContent.trim();
+    item.append(label);
+
+    if (isAuthor) {
+      const actions = document.createElement("span");
+      actions.className = "publication-order-actions";
+      [["up", "↑"], ["down", "↓"], ["remove-author", "×"]].forEach(([action, text]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        if (action === "remove-author") {
+          button.setAttribute("data-remove-author", "");
+        } else {
+          button.dataset[action] = "";
+        }
+        button.textContent = text;
+        button.setAttribute("aria-label", `${action} ${label.textContent}`);
+        actions.append(button);
+      });
+      item.append(actions);
+    } else {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.removeCitation = "";
+      button.textContent = "×";
+      button.setAttribute("aria-label", `Remove citation to ${label.textContent}`);
+      item.append(button);
+    }
+
+    list.append(item);
+    if (isAuthor) {
+      const position = document.createElement("span");
+      position.className = "publication-position";
+      item.prepend(position);
+      bindAuthorRow(item);
+      refreshAuthorOrder();
+    } else {
+      bindCitationRow(item);
+    }
+    updateOptions(select, list, itemAttribute);
+  }
+
+  authorList.querySelectorAll("li").forEach(bindAuthorRow);
+  citationList.querySelectorAll("li").forEach(bindCitationRow);
+
+  document.getElementById("add-author").addEventListener("click", () => {
+    addListItem(authorList, authorSelect, true, "data-author-id", "author_ids");
+    authorSelect.value = "";
+  });
+
+  document.getElementById("add-citation").addEventListener("click", () => {
+    addListItem(citationList, citationSelect, false, "data-citation-id", "citation_ids");
+    citationSelect.value = "";
+  });
+
+  updateOptions(authorSelect, authorList, "data-author-id");
+  updateOptions(citationSelect, citationList, "data-citation-id");
+  refreshAuthorOrder();
+</script>
+{% endblock %}
