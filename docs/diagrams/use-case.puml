@@ -1,0 +1,34 @@
+@startuml
+left to right direction
+!pragma layout smetana
+skinparam shadowing false
+skinparam actorBorderColor #1B365D
+skinparam actorFontColor #1E232D
+skinparam usecaseBackgroundColor #FFFFFF
+skinparam usecaseBorderColor #1B365D
+skinparam usecaseFontColor #1E232D
+skinparam rectangleBorderColor #1B365D
+skinparam rectangleBackgroundColor #F8FAFC
+skinparam arrowColor #1B365D
+
+actor "Public" as Public
+
+rectangle "Research Platform" {
+  usecase "Browse Publications" as Browse_Publications
+  usecase "View Publication Details" as View_Publication_Details
+  usecase "Manage Publications" as Manage_Publications
+  usecase "View Author Graph" as View_Author_Graph
+  usecase "View Author Info" as View_Author_Info
+}
+
+actor "Author" as Author
+
+Public --> Browse_Publications
+Browse_Publications <-- Author
+View_Publication_Details ..> Browse_Publications : <<extend>>
+Manage_Publications <-- Author
+Public --> View_Author_Graph
+View_Author_Info ..> Browse_Publications : <<extend>>
+View_Author_Info ..> View_Author_Graph : <<extend>>
+
+@enduml

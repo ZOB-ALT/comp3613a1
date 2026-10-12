@@ -1,0 +1,29 @@
+{
+  "system": "Research Platform",
+  "actors": [
+    {"name": "Public", "side": "left"},
+    {"name": "Author", "side": "right"}
+  ],
+  "use_cases": [
+    {
+      "name": "Browse Publications",
+      "actors": ["Public", "Author"]
+    },
+    {
+      "name": "View Publication Details",
+      "extends": ["Browse Publications"]
+    },
+    {
+      "name": "Manage Publications",
+      "actors": ["Author"]
+    },
+    {
+      "name": "View Author Graph",
+      "actors": ["Public"]
+    },
+    {
+      "name": "View Author Info",
+      "extends": ["Browse Publications", "View Author Graph"]
+    }
+  ]
+}
