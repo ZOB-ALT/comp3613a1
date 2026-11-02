@@ -511,11 +511,11 @@ The test code is located in the `tests/` directory:
 
 ### Reports
 
-### Unit and Integration Tests Report
+**Unit and Integration Tests Report**
 
-![Pytest Results](screenshots/pytest_results.png)
+![Unit and Integration Tests](screenshots/all_tests.png)
 
-### Postman Collection Run Report
+**Postman Collection Run Report**
 
 ![Postman Run](screenshots/postman_run.png)
 
