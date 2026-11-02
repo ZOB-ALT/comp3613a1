@@ -522,3 +522,9 @@ The test code is located in the `tests/` directory:
 ### UAT Report
 
 The completed User Acceptance Test report is in [assignment2_plans.md](assignment2_plans.md).
+
+
+## Repository Link
+
+The complete source code for ScholarNet, including all test files and the Postman collection, is available on GitHub:
+[https://github.com/ZOB-ALT/comp3613a1](https://github.com/ZOB-ALT/comp3613a1)
