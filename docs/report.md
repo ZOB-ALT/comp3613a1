@@ -495,3 +495,30 @@ Course skills are hashed at export and compared to `.agents/skills.lock.json`. D
 - Status: **pass**
 - Root: `e84cd692d0b85eefe546385661958c27d07e8be6c5176a82012f68ccff5c8beb`
 - none
+## Assignment 2 Deliverables
+
+### Test Plans
+
+Test plans (UAT, Unit, and Integration) are documented in [assignment2_plans.md](assignment2_plans.md).
+
+### Implementation
+
+The test code is located in the `tests/` directory:
+- `tests/unit/` — Unit tests with mocked dependencies
+- `tests/integration/` — Integration tests with the real test DB
+- `tests/api/` — API tests using FastAPI TestClient
+- `tests/postman/` — Postman collection for API testing
+
+### Reports
+
+### Unit and Integration Tests Report
+
+![Pytest Results](screenshots/pytest_results.png)
+
+### Postman Collection Run Report
+
+![Postman Run](screenshots/postman_run.png)
+
+### UAT Report
+
+The completed User Acceptance Test report is in [assignment2_plans.md](assignment2_plans.md).

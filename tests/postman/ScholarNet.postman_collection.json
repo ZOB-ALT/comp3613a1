@@ -1,0 +1,181 @@
+{
+	"info": {
+		"_postman_id": "b1a2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+		"name": "ScholarNet API Tests",
+		"description": "API test collection for COMP 3613 Assignment 2. Tests health, public pages, and auth protection.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test('Body matches JSON', function () {",
+							"    const jsonData = pm.response.json();",
+							"    pm.expect(jsonData.ok).to.eql(true);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/health",
+					"host": ["{{base_url}}"],
+					"path": ["health"]
+				}
+			}
+		},
+		{
+			"name": "Browse Publications",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test('Response is HTML', function () {",
+							"    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/publications",
+					"host": ["{{base_url}}"],
+					"path": ["publications"]
+				}
+			}
+		},
+		{
+			"name": "Search Publications (Query)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/publications?query=deep&year=2024",
+					"host": ["{{base_url}}"],
+					"path": ["publications"],
+					"query": [
+						{"key": "query", "value": "deep"},
+						{"key": "year", "value": "2024"}
+					]
+				}
+			}
+		},
+		{
+			"name": "Author Graph",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/authors/graph",
+					"host": ["{{base_url}}"],
+					"path": ["authors", "graph"]
+				}
+			}
+		},
+		{
+			"name": "Login Page",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200', function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/login",
+					"host": ["{{base_url}}"],
+					"path": ["login"]
+				}
+			}
+		},
+		{
+			"name": "Unauthorized Manage Route",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Status code is 200 (401 page rendered)', function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test('Body contains unauthorized message', function () {",
+							"    pm.expect(pm.response.text().toLowerCase()).to.include('unauthorized');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/manage/publications",
+					"host": ["{{base_url}}"],
+					"path": ["manage", "publications"]
+				}
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:5000",
+			"type": "string"
+		}
+	]
+}
